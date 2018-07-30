@@ -4,7 +4,10 @@ Wake-On-LAN daemon
 Compile:
 
 ```
+# current arch:
 go build -ldflags "-s -w"
+# ARMv7:
+GOARCH=arm GOARM=7 go build -o go-wol-daemon-arm -ldflags "-s -w"
 ```
 
 Start daemon:
