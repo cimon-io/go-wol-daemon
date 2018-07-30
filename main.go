@@ -16,8 +16,8 @@ type macStruct struct {
 }
 
 var (
-	flagPort = flag.String("port", "3000", "Port to listen on")
-	token    = "02ec48d46e0aee7cad97502707c5b93bea5d940a37a33a680a3221f7aee83ed4"
+	flagPort  = flag.String("port", "3000", "Port to listen on")
+	flagToken = flag.String("token", "02ec48d46e0a7ae83ed4", "Token")
 )
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +73,6 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	flag.Parse()
 
-	http.HandleFunc("/"+token, mainHandler)
+	http.HandleFunc("/"+*flagToken, mainHandler)
 	log.Panic(http.ListenAndServe(":"+*flagPort, nil))
 }
