@@ -138,9 +138,9 @@ func sendWakeOnLAN(mac string) {
 }
 
 func getStatus(ipaddr string) state {
-	st := state{Power: false, System: "", Users: 0, Uptime: "0", LA: 0, LA5: 0, LA15: 0, Available: false}
+	st := state{Power: false, System: "Unknown", Users: 0, Uptime: "0", LA: 0, LA5: 0, LA15: 0, Available: false}
 
-	cmd := exec.Command("ping", ipaddr, "-c 2")
+	cmd := exec.Command("ping", ipaddr, "-c", "2")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
@@ -178,7 +178,7 @@ func getStatus(ipaddr string) state {
 	st.LA15, _ = strconv.ParseFloat(data[4], 64)
 	st.Users, _ = strconv.ParseUint(strings.Split(data[len(data)-1], "users=")[1], 10, 64)
 
-	if st.Users > 1 {
+	if st.Users > 0 {
 		st.Available = false
 		return st
 	}
