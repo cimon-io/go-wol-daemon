@@ -56,9 +56,10 @@ const tpl = `
 </body></html>`
 
 var (
-	flagPort  = flag.String("port", "3000", "Port to listen on")
-	flagToken = flag.String("token", "02ec48d46e0a7ae83ed4", "Token")
-	flagUser  = flag.String("user", "root", "Remote SSH user")
+	flagPort       = flag.String("port", "3000", "Port to listen on")
+	flagToken      = flag.String("token", "02ec48d46e0a7ae83ed4", "Token")
+	flagUser       = flag.String("user", "root", "Remote SSH user")
+	flagSSHKeyPath = flag.String("sshkey", "", "SSH private key path")
 )
 
 func mainHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +101,6 @@ func mainHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
-
 }
 
 func sendWakeOnLAN(mac string) {
@@ -138,7 +138,16 @@ func sendWakeOnLAN(mac string) {
 }
 
 func getStatus(ipaddr string) state {
-	st := state{Power: false, System: "Unknown", Users: 0, Uptime: "0", LA: 0, LA5: 0, LA15: 0, Available: false}
+	st := state{
+		Power:     false,
+		System:    "Unknown",
+		Users:     0,
+		Uptime:    "0",
+		LA:        0,
+		LA5:       0,
+		LA15:      0,
+		Available: false,
+	}
 
 	cmd := exec.Command("ping", ipaddr, "-c", "2")
 	var out bytes.Buffer
@@ -156,15 +165,28 @@ func getStatus(ipaddr string) state {
 
 	st.System = "Linux"
 
-	cmd = exec.Command("ssh", *flagUser+"@"+ipaddr, "cat /proc/uptime; cat /proc/loadavg; who -q")
+	ssh_args := []string{
+		*flagUser + "@" + ipaddr,
+	}
+
+	if len(*flagSSHKeyPath) > 0 {
+		ssh_args = append(ssh_args, "-i", *flagSSHKeyPath)
+	}
+
+	ssh_args = append(ssh_args, "cat /proc/uptime; cat /proc/loadavg; who -q")
+
+	cmd = exec.Command("ssh", ssh_args...)
 	out.Reset()
 	cmd.Stdout = &out
+
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
+
 	timer := time.AfterFunc(20*time.Second, func() {
 		cmd.Process.Kill()
 	})
+
 	if err := cmd.Wait(); err != nil {
 		return st
 	}
